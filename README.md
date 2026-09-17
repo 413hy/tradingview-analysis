@@ -76,7 +76,7 @@ TradingView人工登录：`bash scripts/tradingview_login.sh`。Telegram采集�
 .venv/bin/python scripts/run.py .venv/bin/pytest -q
 ```
 
-PostgreSQL集成测试使用唯一临时schema并自动清理；模拟测试不写生产信号。实际模型验证脚本 `scripts/verify_ai.py` 使用明确标注的测试数据且不发布信号。
+PostgreSQL集成测试使用唯一临时schema并自动清理；模拟测试不写生产信号。实际模型验证脚本 `scripts/verify_ai.py` 使用明确标注的测试数据且不发布信号。当前公开版本静态检查通过，完整测试为 55 项通过。
 
 ## 交付与验收边界
 
@@ -84,4 +84,4 @@ PostgreSQL集成测试使用唯一临时schema并自动清理；模拟测试不�
 
 仓库不包含密钥、账户认证文件、运行数据库、浏览器登录会话或本机网络配置。
 
-参考交易规则来源为 `413hy/codex-single/auto-trader-longtime`；风险计算和Telegram轮询适配的来源见代码与 [实现说明](docs/IMPLEMENTATION_NOTES.md)。完整需求见 [开发规格](ai_crypto_signal_system_development_spec.md)，备份恢复见 [运维说明](docs/OPERATIONS.md)。
+参考交易规则来源为 `413hy/codex-single/auto-trader-longtime`；风险计算和Telegram轮询适配的来源见代码与 [实现说明](docs/IMPLEMENTATION_NOTES.md)。完整需求见 [开发规格](ai_crypto_signal_system_development_spec.md) 与 [确认后的需求基线](docs/REQUIREMENTS_BASELINE.md)，服务关系见 [架构说明](docs/ARCHITECTURE.md)，新设备使用 [部署指南](docs/DEPLOYMENT.md)，备份恢复见 [运维说明](docs/OPERATIONS.md)，验证证据和未完成项见 [验收说明](docs/ACCEPTANCE.md)。

@@ -56,8 +56,8 @@ TradingView 使用 persistent profile，首次人工登录辅助，不保存明�
 
 ## 实现与剩余验收
 
-分析流水线、可配置权重/榜单限制、五个可选 Provider、行情字段健康/血缘、交易保护恢复、两个 Bot、部署和运维代码已实现；两阶段真实 Codex 结构调用通过。API、PostgreSQL、worker、trader、两个 Bot 与宿主机 bridge 已常驻部署。详见 [验收记录](ACCEPTANCE.md)。
+分析流水线、可配置权重/榜单限制、五个可选 Provider、行情字段健康/血缘、交易保护恢复、两个 Bot、部署和运维代码已实现；两阶段真实 Codex 结构调用和 Telegram Bot 接口曾在开发环境验证。公开仓库不包含任何环境凭据、会话或运行数据。详见 [验收说明](ACCEPTANCE.md)。
 
-剩余外部依赖：当前网络对 Binance 正式与 Demo 返回 451；Demo/Bot 密钥及管理员 ID 未配置，MTProto 与 TradingView 人工登录待操作。真实公共行情周期、Demo 订单及 Bot 收发必须在这些条件就绪后验收；模拟结果不能替代。
+每台新设备仍须配置 Demo/Bot 凭据和管理员 ID，完成 MTProto 与 TradingView 人工登录，并确认部署网络能访问 Binance 正式公开行情与 Demo 接口。真实公共行情周期、Demo 订单、保护触发和重启恢复必须在目标环境单独验收；模拟结果不能替代。
 
 结算当前只报告逐笔成交已实现盈亏减手续费，明确不含资金费。外部人工平仓或清算无法按本系统订单身份完整归因时，保留待核账并告警，不编造终态。
