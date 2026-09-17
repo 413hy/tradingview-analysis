@@ -1,0 +1,15 @@
+[Unit]
+Description=TradingView signal local Codex bridge
+After=network-online.target docker.service
+Requires=docker.service
+[Service]
+Type=simple
+WorkingDirectory=/root/tradingview-analysis
+EnvironmentFile=/root/tradingview-analysis/deployment/bridge.env
+Environment=PYTHONPATH=/root/tradingview-analysis/shared/src:/root/tradingview-analysis/signal-system/src
+ExecStart=/root/tradingview-analysis/.venv/bin/uvicorn signals.codex_bridge:app --host 172.30.87.1 --port 8766 --no-access-log
+Restart=on-failure
+RestartSec=5
+UMask=0077
+[Install]
+WantedBy=multi-user.target

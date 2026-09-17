@@ -1,0 +1,14 @@
+.env
+*.env
+!.env.example
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+runtime/
+*.session*
+*.log
+
+# Local diagnostic artifacts
+*.pcap
+*.pcapng

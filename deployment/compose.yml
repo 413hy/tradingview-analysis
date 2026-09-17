@@ -1,0 +1,103 @@
+name: tradingview-analysis
+x-app: &app
+  build:
+    context: ..
+    dockerfile: deployment/Dockerfile
+  image: tradingview-analysis:local
+  restart: unless-stopped
+  environment: &environment
+    API_TOKEN: ${API_TOKEN}
+    AI_MODEL: ${AI_MODEL:-gpt-5.6-terra}
+    AI_REASONING_EFFORT: ${AI_REASONING_EFFORT:-medium}
+    AI_TIMEOUT_SECONDS: ${AI_TIMEOUT_SECONDS:-240}
+    DATABASE_URL: postgresql+psycopg://signals:${POSTGRES_PASSWORD}@postgres:5432/signals
+    RUNTIME_DIR: /data
+    TRADINGVIEW_PROFILE_DIR: /data/tradingview-profile
+    TELEGRAM_SESSION_PATH: /data/telegram/user
+    SIGNAL_API_URL: http://api:8010
+    CODEX_BRIDGE_URL: http://172.30.87.1:8766
+  depends_on:
+    postgres:
+      condition: service_healthy
+  networks: [internal]
+  logging:
+    driver: json-file
+    options: {max-size: "10m", max-file: "3"}
+services:
+  postgres:
+    image: postgres:16-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: signals
+      POSTGRES_DB: signals
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports: ["127.0.0.1:55432:5432"]
+    volumes: ["../runtime/postgres:/var/lib/postgresql/data"]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U signals -d signals"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [internal]
+  api:
+    <<: *app
+    command: [sh, -c, "alembic upgrade head && uvicorn signals.api:app --host 0.0.0.0 --port 8010"]
+    ports: ["127.0.0.1:8010:8010"]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8010/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  worker:
+    <<: *app
+    environment:
+      <<: *environment
+      TELEGRAM_API_ID: ${TELEGRAM_API_ID:-0}
+      TELEGRAM_API_HASH: ${TELEGRAM_API_HASH:-}
+      COINGLASS_API_KEY: ${COINGLASS_API_KEY:-}
+      CRYPTOQUANT_API_KEY: ${CRYPTOQUANT_API_KEY:-}
+      NANSEN_API_KEY: ${NANSEN_API_KEY:-}
+      COINMARKETCAL_API_KEY: ${COINMARKETCAL_API_KEY:-}
+      LUNARCRUSH_API_KEY: ${LUNARCRUSH_API_KEY:-}
+      NANSEN_TOKEN_MAP: '${NANSEN_TOKEN_MAP:-{}}'
+    command: [python, -m, signals.pipeline]
+    volumes: ["../runtime/analysis:/data"]
+    depends_on:
+      api: {condition: service_healthy}
+  trader:
+    <<: *app
+    environment:
+      <<: *environment
+      BINANCE_DEMO_API_KEY: ${BINANCE_DEMO_API_KEY:-}
+      BINANCE_DEMO_API_SECRET: ${BINANCE_DEMO_API_SECRET:-}
+      TRADING_ENABLED: ${TRADING_ENABLED:-false}
+    command: [python, -m, trader.service]
+    volumes: ["../runtime/trading:/data"]
+    depends_on:
+      api: {condition: service_healthy}
+  analysis-bot:
+    <<: *app
+    profiles: [bots]
+    environment:
+      <<: *environment
+      ANALYSIS_BOT_TOKEN: ${ANALYSIS_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-0}
+      TELEGRAM_USER_ID: ${TELEGRAM_USER_ID:-0}
+    command: [python, -m, signals.bot]
+    volumes: ["../runtime/analysis:/data"]
+    depends_on:
+      api: {condition: service_healthy}
+  trading-bot:
+    <<: *app
+    profiles: [bots]
+    environment:
+      <<: *environment
+      TRADING_BOT_TOKEN: ${TRADING_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-0}
+      TELEGRAM_USER_ID: ${TELEGRAM_USER_ID:-0}
+    command: [python, -m, trader.bot]
+    volumes: ["../runtime/trading:/data"]
+networks:
+  internal:
+    ipam:
+      config: [{subnet: 172.30.87.0/24, gateway: 172.30.87.1}]
